@@ -17,6 +17,14 @@ Usage of go-code-tree:
         Show third-party imports
 ```
 
+### Color references
+
+* Third party dependencies have a light brown/subtle orange tint (burlywood and seashell), which is the default color for each node.
+* Go code have a greenish tint (seagreen and mintcream)
+* Dependencies/directories have a bright orange/yellow tint (orange and lightyellow)
+
+Refer to the [Example](#example) for a clear picture.
+
 ## Build
 
 ```
