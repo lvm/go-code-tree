@@ -49,7 +49,7 @@ Refer to the [Example](#example) for a clear picture.
 
 ## Build
 
-### `go-code-tree-fn`
+### `go-code-tree`
 
 ```
 go build -ldflags "-s -w" -o go-code-tree cmd/go-code-tree-imp/main.go
