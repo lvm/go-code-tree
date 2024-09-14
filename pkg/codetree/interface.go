@@ -7,7 +7,7 @@ type (
 	}
 
 	IFuncTree interface {
-		GetImports(scanMocks, scanTests bool) (Relation, error)
+		GetFuncs(scanMocks, scanTests bool) (Relation, error)
 		GenerateGraph() (string, error)
 	}
 )
