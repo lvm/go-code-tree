@@ -1,12 +1,9 @@
-package main
+package codetree
 
 import (
-	"bufio"
-	"flag"
 	"fmt"
 	"go/parser"
 	"go/token"
-	"log"
 	"os"
 	"path/filepath"
 	"sort"
@@ -14,44 +11,13 @@ import (
 )
 
 type (
-	ICodeTree interface {
-		GetImports(scanMocks, scanTests bool) (Relation, error)
-		GenerateGraph(showThirdParty bool) (string, error)
-	}
-
 	Relation map[string][]string
-	Module   string
-	CodeTree struct {
+	ImpTree  struct {
 		Root    string
 		Module  Module
 		Imports Relation
 	}
 )
-
-func getModule(dir string) (*Module, error) {
-	file, err := os.Open(filepath.Join(dir, "go.mod"))
-	if err != nil {
-		return nil, err
-	}
-	defer file.Close()
-
-	scanner := bufio.NewScanner(file)
-	for scanner.Scan() {
-		line := scanner.Text()
-
-		if strings.HasPrefix(line, "module ") {
-			mod := strings.TrimSpace(strings.TrimPrefix(line, "module "))
-			module := Module(mod)
-			return &module, nil
-		}
-	}
-
-	if err := scanner.Err(); err != nil {
-		return nil, err
-	}
-
-	return nil, nil
-}
 
 func parseImports(filePath string) ([]string, error) {
 	fset := token.NewFileSet()
@@ -68,23 +34,14 @@ func parseImports(filePath string) ([]string, error) {
 	return imports, nil
 }
 
-func NewCodeTree(root string, module Module) *CodeTree {
-	return &CodeTree{
+func NewImpTree(root string, module Module) *ImpTree {
+	return &ImpTree{
 		Root:   root,
 		Module: module,
 	}
 }
 
-func (m *Module) String() string {
-	return string(*m)
-}
-
-func (m *Module) getRepo() string {
-	mods := strings.Split(m.String(), "/")
-	return mods[len(mods)-1]
-}
-
-func (ct *CodeTree) GetImports(scanMocks, scanTests bool) (Relation, error) {
+func (ct *ImpTree) GetImports(scanMocks, scanTests bool) (Relation, error) {
 	imports := make(Relation)
 	walker := func(path string, info os.FileInfo, err error) error {
 		if err != nil {
@@ -113,18 +70,18 @@ func (ct *CodeTree) GetImports(scanMocks, scanTests bool) (Relation, error) {
 	return imports, nil
 }
 
-func (ct *CodeTree) GenerateGraph(showThirdParty bool) (string, error) {
+func (ct *ImpTree) GenerateGraph(showThirdParty bool) (string, error) {
 	var (
 		sb          strings.Builder
 		imports     Relation = ct.Imports
 		mod         string   = ct.Module.String()
-		repo        string   = ct.Module.getRepo()
+		basename    string   = ct.Module.Basename()
 		dirContent  Relation = make(Relation)
 		fileImports Relation = make(Relation)
 	)
 
 	for _, line := range []string{
-		fmt.Sprintf("digraph \"%s\" {\n", repo),
+		fmt.Sprintf("digraph \"%s\" {\n", basename),
 		"  rankdir=TB;\n",
 		"  node [shape=box, color=\"burlywood\", style=\"filled\", fillcolor=\"seashell\"];\n",
 		"  edge [color=\"burlywood\"];\n",
@@ -150,7 +107,7 @@ func (ct *CodeTree) GenerateGraph(showThirdParty bool) (string, error) {
 			isLocal := false
 
 			if strings.HasPrefix(imp, mod) {
-				imp = strings.Replace(imp, mod, repo, 1)
+				imp = strings.Replace(imp, mod, basename, 1)
 				localImports[imp] = struct{}{}
 				isLocal = true
 			}
@@ -188,35 +145,4 @@ func (ct *CodeTree) GenerateGraph(showThirdParty bool) (string, error) {
 	sb.WriteString("}")
 
 	return sb.String(), nil
-}
-
-func main() {
-	dir := flag.String("dir", "./", "Directory of the Go project to scan for imports")
-	showThirdParty := flag.Bool("third", false, "Show third-party imports")
-	scanMocks := flag.Bool("mocks", false, "Scan mock files")
-	scanTests := flag.Bool("tests", false, "Scan test files")
-	flag.Parse()
-
-	mod, err := getModule(*dir)
-	if err != nil {
-		log.Print("Error reading module name:", err)
-		return
-	}
-
-	ct := NewCodeTree(*dir, *mod)
-
-	imports, err := ct.GetImports(*scanMocks, *scanTests)
-	if err != nil {
-		log.Print("Error getting imports:", err)
-		return
-	}
-	ct.Imports = imports
-
-	graph, err := ct.GenerateGraph(*showThirdParty)
-	if err != nil {
-		log.Print("Failed to generate graph:", err)
-		return
-	}
-
-	fmt.Println(graph)
 }

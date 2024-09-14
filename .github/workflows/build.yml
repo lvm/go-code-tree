@@ -42,43 +42,47 @@ jobs:
 
     - name: Build for Linux
       run: |
-        GOOS=linux GOARCH=amd64 go build -ldflags "-s -w" -o bin/go-code-tree-linux main.go
+        GOOS=linux GOARCH=amd64 go build -ldflags "-s -w" -o bin/go-code-tree-linux cmd/go-tree-code-imp/main.go
+        GOOS=linux GOARCH=amd64 go build -ldflags "-s -w" -o bin/go-code-tree-fn-linux cmd/go-tree-code-fn/main.go
 
     - name: Build for macOS (amd64)
       run: |
-        GOOS=darwin GOARCH=amd64 go build -ldflags "-s -w" -o bin/go-code-tree-macos-intel main.go
+        GOOS=darwin GOARCH=amd64 go build -ldflags "-s -w" -o bin/go-code-tree-macos-intel cmd/go-tree-code-imp/main.go
+        GOOS=darwin GOARCH=amd64 go build -ldflags "-s -w" -o bin/go-code-tree-fn-macos-intel cmd/go-tree-code-fn/main.go
 
     - name: Build for macOS (arm64)
       run: |
-        GOOS=darwin GOARCH=arm64 go build -ldflags "-s -w" -o bin/go-code-tree-macos-arm main.go
+        GOOS=darwin GOARCH=arm64 go build -ldflags "-s -w" -o bin/go-code-tree-macos-arm cmd/go-tree-code-imp/main.go
+        GOOS=darwin GOARCH=arm64 go build -ldflags "-s -w" -o bin/go-code-tree-fn-macos-arm cmd/go-tree-code-fn/main.go
 
     - name: Build for Windows
       run: |
-        GOOS=windows GOARCH=amd64 go build -ldflags "-s -w" -o bin/go-code-tree-windows.exe main.go
+        GOOS=windows GOARCH=amd64 go build -ldflags "-s -w" -o bin/go-code-tree-windows.exe cmd/go-tree-code-imp/main.go
+        GOOS=windows GOARCH=amd64 go build -ldflags "-s -w" -o bin/go-code-tree-fn-windows.exe cmd/go-tree-code-fn/main.go
   
     - name: Upload build artifact for Linux
       uses: actions/upload-artifact@v4
       with:
         name: go-code-tree-linux
-        path: bin/go-code-tree-linux
+        path: bin/go-code-tree*-linux
 
     - name: Upload build artifact for macOS (intel)
       uses: actions/upload-artifact@v4
       with:
         name: go-code-tree-macos-intel
-        path: bin/go-code-tree-macos-intel
+        path: bin/go-code-tree*-macos-intel
 
     - name: Upload build artifact for macOS (arm64)
       uses: actions/upload-artifact@v4
       with:
         name: go-code-tree-macos-arm
-        path: bin/go-code-tree-macos-arm
+        path: bin/go-code-tree*-macos-arm
 
     - name: Upload build artifact for Windows
       uses: actions/upload-artifact@v4
       with:
         name: go-code-tree-windows
-        path: bin/go-code-tree-windows.exe
+        path: bin/go-code-tree*-windows.exe
 
     - name: Create Release
       uses: ncipollo/release-action@v1
